@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     rom_path = input_path(input("ROM litematic path: "))
 
-    placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon')")
+    placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
 
     if placeholder_input is not "":
         placeholder_block = placeholder_input
