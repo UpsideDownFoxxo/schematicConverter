@@ -162,6 +162,10 @@ if __name__ == '__main__':
     # attempt to get data Points on z-axis
     dataPoints = extract_data_points(rom_path)
 
+    if not dataPoints:
+        print(f"unable to get data points")
+        exit(1)
+
     # retry getting data points on x-axis if layout doesn't match up
     if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
         print(f"unable to match data points, retrying on second axis -> pattern({len(pattern)}|{len(pattern[0])}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
