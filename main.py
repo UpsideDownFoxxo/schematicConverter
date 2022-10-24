@@ -4,6 +4,11 @@ import os
 # all the different SS-boxes from id=1 to id=15
 data_palette = ["minecraft:white_shulker_box", "minecraft:orange_shulker_box", "minecraft:magenta_shulker_box", "minecraft:light_blue_shulker_box", "minecraft:yellow_shulker_box", "minecraft:lime_shulker_box", "minecraft:pink_shulker_box", "minecraft:gray_shulker_box", "minecraft:light_gray_shulker_box", "minecraft:cyan_shulker_box", "minecraft:purple_shulker_box", "minecraft:blue_shulker_box", "minecraft:brown_shulker_box", "minecraft:green_shulker_box", "minecraft:red_shulker_box"]
 
+placeholder_block = "minecraft:beacon"
+
+def end(status):
+    input("press any key to exit")
+    exit(status)
 
 # this function converts all coords to the coords that would be in a positive size region
 def convert_funky_coordinates(coordinates, bounding_box):
@@ -88,7 +93,7 @@ def generate_block_palette_region(block_palette, y):
 
 def extract_data_points(rom_path, inverted = False):
     rom_schematic = Schematic.load(rom_path)
-    schematic_3d = schematic_to_3d_array(rom_schematic, ["minecraft:target"])
+    schematic_3d = schematic_to_3d_array(rom_schematic, [placeholder_block])
 
     data_points = [[[]]]
 
@@ -100,7 +105,7 @@ def extract_data_points(rom_path, inverted = False):
                 line = []
                 for z in range(len(schematic_3d[0][0])):
                     block_id = schematic_3d[x][y][z]
-                    if block_id == "minecraft:target":
+                    if block_id == placeholder_block:
                         line.append([x, y, z])
                 if line:
                     layer.append(line)
@@ -116,7 +121,7 @@ def extract_data_points(rom_path, inverted = False):
             line = []
             for x in range(len(schematic_3d)):
                 block_id = schematic_3d[x][y][z]
-                if block_id == "minecraft:target":
+                if block_id == placeholder_block:
                     line.append([x, y, z])
             if line:
                 layer.append(line)
@@ -155,12 +160,20 @@ if __name__ == '__main__':
 
     rom_path = input_path(input("ROM litematic path: "))
 
+    placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
+
+    if placeholder_input is not "":
+        placeholder_block = placeholder_input
 
     # break both schematics down into comparable units
     pattern = schematic_to_3d_array(Schematic.load(pattern_path))
 
     # attempt to get data Points on z-axis
     dataPoints = extract_data_points(rom_path)
+
+    if not dataPoints:
+        print(f"unable to get data points")
+        end(1)
 
     # retry getting data points on x-axis if layout doesn't match up
     if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
@@ -170,7 +183,7 @@ if __name__ == '__main__':
     # quit if data point layout still doesn't match up
     if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
         print(f"unable to match data points, check your dimensions -> pattern({len(pattern)}|{len(pattern[0])}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
-        exit(1)
+        end(1)
 
     rom_schematic = Schematic.load(rom_path)
     rom_region = None
@@ -199,7 +212,7 @@ if __name__ == '__main__':
         # quit if pattern has too many colors
         if len(block_palette) > 15:
             print(f"too many colors in pattern on layer {y}: counted {len(block_palette)} Maximum of 15 allowed")
-            exit(1)
+            end(1)
 
         print(f"palette for layer: {y}")
 
@@ -219,3 +232,5 @@ if __name__ == '__main__':
     # generate schematic using regions dict
     generated_schematic = Schematic("generatedBlockPalette", "beepboop", "nothing to see here", regions)
     generated_schematic.save("generatedRom.litematic")
+
+    end(0)
