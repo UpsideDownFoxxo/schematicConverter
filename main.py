@@ -141,13 +141,14 @@ def extract_data_points(rom_path, inverted = False):
     return layers
 
 
-def input_path(path):
+def input_path(path_name):
     # this should repeat until the user inputs a valid file path
+    path = input(path_name)
     print(path)
 
     if not os.path.exists(path):
         print("invalid file path")
-        return input_path(path)
+        return input_path(path_name)
 
     return path
 
@@ -156,9 +157,9 @@ def input_path(path):
 if __name__ == '__main__':
 
 
-    pattern_path = input_path(input("Pattern litematic path: "))
+    pattern_path = input_path("Pattern litematic path: ")
 
-    rom_path = input_path(input("ROM litematic path: "))
+    rom_path = input_path("ROM litematic path: ")
 
     placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
 
