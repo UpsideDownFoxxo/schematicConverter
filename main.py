@@ -165,6 +165,8 @@ if __name__ == '__main__':
 
     placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
 
+    litematic_version = input("enter litematic version (1-6)")
+
     if placeholder_input != "":
         placeholder_block = placeholder_input
 
@@ -233,7 +235,7 @@ if __name__ == '__main__':
     regions["rom"] = generated_region
 
     # generate schematic using regions dict
-    generated_schematic = Schematic("generatedBlockPalette", "beepboop", "nothing to see here", regions)
+    generated_schematic = Schematic("generated Rom", "UpsideDownFoxxo's schematic Generator", "nothing to see here", regions, litematic_version)
     generated_schematic.save("generatedRom.litematic")
 
     end(0)
