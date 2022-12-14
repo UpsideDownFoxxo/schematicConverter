@@ -143,14 +143,14 @@ def extract_data_points(path, inverted=False):
     return layers
 
 
-def input_path(path_name):
+def input_path(path_name, extension=""):
     # this should repeat until the user inputs a valid file path
-    path = input(path_name)
+    path = input(path_name) + extension
     print(path)
 
     if not os.path.exists(path):
         print("invalid file path")
-        return input_path(path_name)
+        return input_path(path_name, extension)
 
     return path
 
@@ -158,17 +158,24 @@ def input_path(path_name):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
+    folder_path = input_path("litematic folder path: ") + "\\"
 
-    pattern_path = input_path("Pattern litematic path: ")
+    rom_path = folder_path + input_path("ROM litematic name (e.g. \"CoolRom\"): ", ".litematic")
 
-    rom_path = input_path("ROM litematic path: ")
+    pattern_path = folder_path + input_path("Pattern litematic name (e.g. \"CoolPattern\"): ", ".litematic")
 
-    placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
+    output_file = input("output file name (e.g. \"CoolConfiguredRom\"): ") + ".litematic"
+    print(output_file)
 
-    litematic_version = input("enter litematic version (1-6)")
-
+    placeholder_input = input("enter placeholder block id or skip to use default (\"minecraft:beacon\"): ")
     if placeholder_input != "":
         placeholder_block = placeholder_input
+        print(f"using custom block \"{placeholder_block}\"")
+    else:
+        print(f"using default block \"{placeholder_block}\"")
+
+    litematic_version = input("enter litematic version (1-6)")
+    print("using litematic version 5")
 
     # break both schematics down into comparable units
     pattern = schematic_to_3d_array(Schematic.load(pattern_path))
@@ -236,6 +243,8 @@ if __name__ == '__main__':
 
     # generate schematic using regions dict
     generated_schematic = Schematic("generated Rom", "UpsideDownFoxxo's schematic Generator", "nothing to see here", regions, litematic_version)
-    generated_schematic.save("generatedRom.litematic")
+    generated_schematic.save(folder_path+output_file)
+
+    print(f"conversion successful, schematic saved as {folder_path+output_file}")
 
     end(0)
