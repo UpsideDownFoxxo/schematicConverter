@@ -6,9 +6,11 @@ data_palette = ["minecraft:white_shulker_box", "minecraft:orange_shulker_box", "
 
 placeholder_block = "minecraft:beacon"
 
+
 def end(status):
     input("press any key to exit")
     exit(status)
+
 
 # this function converts all coords to the coords that would be in a positive size region
 def convert_funky_coordinates(coordinates, bounding_box):
@@ -30,8 +32,8 @@ def schematic_to_3d_array(schematic, filters=None):
     schematic_regions = schematic.regions
 
     # doing this to get the non-enumerable dictionary entry
-    for region in schematic_regions:
-        region = schematic_regions[region]
+    for array_region in schematic_regions:
+        array_region = schematic_regions[array_region]
 
         # get dimensions and create array to hold layers
         l, h, w = schematic.length, schematic.height, schematic.width
@@ -39,12 +41,12 @@ def schematic_to_3d_array(schematic, filters=None):
         schematic_array = [[[0 for z in range(l)] for y in range(h)] for x in range(w)]
 
         # put every block in the region into the array structure
-        for block in region.allblockpos():
+        for block in array_region.allblockpos():
             x, y, z = block[0], block[1], block[2]
-            block_adjusted = convert_funky_coordinates(block, [region.width, region.height, region.length])
+            block_adjusted = convert_funky_coordinates(block, [array_region.width, array_region.height, array_region.length])
             cor_x, cor_y, cor_z = block_adjusted[0], block_adjusted[1], block_adjusted[2]
             # block-id returns a string with quotes in it, so we have to remove it
-            block_id = region.getblock(x, y, z).blockid.replace("\"", "")
+            block_id = array_region.getblock(x, y, z).blockid.replace("\"", "")
             if filters is None or block_id in filters:
                 schematic_array[cor_x][cor_y][cor_z] = block_id
 
@@ -55,45 +57,45 @@ def generate_block_palette(schematic_path, y = None):
     # grab schematic from file
     schematic = Schematic.load(schematic_path)
 
-    region = schematic.regions
-    for region_name in region:
-        region = region[region_name]
+    pattern_region = schematic.regions
+    for region_name in pattern_region:
+        pattern_region = pattern_region[region_name]
         break
 
     # convert y value to value inside region
-    if region.height < 0:
-        y = region.height + y + 1
+    if pattern_region.height < 0:
+        y = pattern_region.height + y + 1
 
-    block_palette = []
+    palette = []
 
-    all_block_pos = region.allblockpos()
+    all_block_pos = pattern_region.allblockpos()
     for block_pos in all_block_pos:
         # add block to palette if not present and y value matches
 
         # once again, .blockid returns a string with quotation marks, so I have to remove them
-        block_id = region.getblock(block_pos[0], block_pos[1], block_pos[2]).blockid.replace("\"", "")
+        block_id = pattern_region.getblock(block_pos[0], block_pos[1], block_pos[2]).blockid.replace("\"", "")
 
-        if block_id not in block_palette and (block_pos[1] is y or y is None):
-            block_palette.append(block_id)
+        if block_id not in palette and (block_pos[1] is y or y is None):
+            palette.append(block_id)
 
-    return block_palette
+    return palette
 
 
-def generate_block_palette_region(block_palette, y):
+def generate_block_palette_region(palette, y):
     # generate new region with correct size from table
-    palette_region = Region(0, y, 0, len(block_palette), 1, 2)
+    palette_region = Region(0, y, 0, len(palette), 1, 2)
 
     # place block in the schematic next to appropriate data block
-    for x in range(len(block_palette)):
-        palette_region.setblock(x, 0, 0, BlockState(block_palette[x]))
+    for x in range(len(palette)):
+        palette_region.setblock(x, 0, 0, BlockState(palette[x]))
         palette_region.setblock(x, 0, 1, BlockState(data_palette[x]))
 
     return palette_region
 
 
-def extract_data_points(rom_path, inverted = False):
-    rom_schematic = Schematic.load(rom_path)
-    schematic_3d = schematic_to_3d_array(rom_schematic, [placeholder_block])
+def extract_data_points(path, inverted=False):
+    rom_schem = Schematic.load(path)
+    schematic_3d = schematic_to_3d_array(rom_schem, [placeholder_block])
 
     data_points = [[[]]]
 
@@ -163,7 +165,7 @@ if __name__ == '__main__':
 
     placeholder_input = input("enter placeholder block id or skip to use default ('minecraft:beacon'): ")
 
-    if placeholder_input is not "":
+    if placeholder_input != "":
         placeholder_block = placeholder_input
 
     # break both schematics down into comparable units
