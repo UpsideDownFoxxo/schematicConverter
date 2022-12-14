@@ -202,7 +202,7 @@ if __name__ == '__main__':
     all_blocks = rom_region.allblockpos()
     for block in all_blocks:
         new_block = convert_funky_coordinates(block, (rom_region.width, rom_region.height, rom_region.length))
-        generated_region.setblock(new_block[0], new_block[1], new_block[2], BlockState(rom_region.getblock(block[0], block[1], block[2]).blockid.replace("\"", "")))
+        generated_region.setblock(new_block[0], new_block[1], new_block[2], rom_region.getblock(block[0], block[1], block[2]))
 
     # accumulate all regions into regions dict
     regions = {}
