@@ -143,14 +143,14 @@ def extract_data_points(path, inverted=False):
     return layers
 
 
-def input_path(path_name, extension=""):
+def input_path(pre_path, path_name, extension=""):
     # this should repeat until the user inputs a valid file path
-    path = input(path_name) + extension
+    path = pre_path + input(path_name) + extension
     print(path)
 
     if not os.path.exists(path):
-        print("invalid file path")
-        return input_path(path_name, extension)
+        print(f"invalid file path {path}")
+        return input_path(pre_path, path_name, extension)
 
     return path
 
@@ -158,11 +158,11 @@ def input_path(path_name, extension=""):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    folder_path = input_path("litematic folder path: ") + "\\"
+    folder_path = input_path("", "litematic folder path: ") + "\\"
 
-    rom_path = folder_path + input_path("ROM litematic name (e.g. \"CoolRom\"): ", ".litematic")
+    rom_path = input_path(folder_path, "ROM litematic name (e.g. \"CoolRom\"): ", ".litematic")
 
-    pattern_path = folder_path + input_path("Pattern litematic name (e.g. \"CoolPattern\"): ", ".litematic")
+    pattern_path = input_path(folder_path, "Pattern litematic name (e.g. \"CoolPattern\"): ", ".litematic")
 
     output_file = input("output file name (e.g. \"CoolConfiguredRom\"): ") + ".litematic"
     print(output_file)
