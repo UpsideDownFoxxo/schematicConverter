@@ -7,7 +7,7 @@ litemapy by SmylerMC: https://github.com/SmylerMC/litemapy
 # how to use:
 - input a file-path pointing to your schematic folder
 - input the name of your rom litematic without the extension
-- input the name of your pattern litematic without the extension
+- input the name of your pattern litematic without the extension (make sure the schematic does not contain any air blocks around your pattern)
 - input the name of the generated litematic without the extension
 - input a block to replace in the litematic (default is 'minecraft:beacon')
 - input the litematic version (1-6)
