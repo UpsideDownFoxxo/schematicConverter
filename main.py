@@ -175,7 +175,7 @@ if __name__ == '__main__':
         print(f"using default block \"{placeholder_block}\"")
 
     litematic_version = input("enter litematic version (1-6)")
-    print("using litematic version 5")
+    print(f"using litematic version {litematic_version}")
 
     # break both schematics down into comparable units
     pattern = schematic_to_3d_array(Schematic.load(pattern_path))
