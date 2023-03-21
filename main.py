@@ -1,10 +1,32 @@
+import math
+
 from litemapy import Schematic, Region, BlockState
 import os
 
 # all the different SS-boxes from id=1 to id=15
-data_palette = ["minecraft:white_shulker_box", "minecraft:orange_shulker_box", "minecraft:magenta_shulker_box", "minecraft:light_blue_shulker_box", "minecraft:yellow_shulker_box", "minecraft:lime_shulker_box", "minecraft:pink_shulker_box", "minecraft:gray_shulker_box", "minecraft:light_gray_shulker_box", "minecraft:cyan_shulker_box", "minecraft:purple_shulker_box", "minecraft:blue_shulker_box", "minecraft:brown_shulker_box", "minecraft:green_shulker_box", "minecraft:red_shulker_box"]
+data_palette = ["minecraft:barrel", "minecraft:white_shulker_box", "minecraft:orange_shulker_box", "minecraft:magenta_shulker_box", "minecraft:light_blue_shulker_box", "minecraft:yellow_shulker_box", "minecraft:lime_shulker_box", "minecraft:pink_shulker_box", "minecraft:gray_shulker_box", "minecraft:light_gray_shulker_box", "minecraft:cyan_shulker_box", "minecraft:purple_shulker_box", "minecraft:blue_shulker_box", "minecraft:brown_shulker_box", "minecraft:green_shulker_box", "minecraft:red_shulker_box"]
 
 placeholder_block = "minecraft:beacon"
+
+point_multiplier = 1
+
+folder_path = None
+
+rom_path = None
+
+pattern_path = None
+
+output_file = None
+
+
+def to_hex(num, expected):
+    hex_num = f"{num:x}"
+
+    # pad with extra zeros to meet expected length
+    if len(hex_num) < expected:
+        hex_num = "0" * (expected - len(hex_num)) + hex_num
+
+    return hex_num
 
 
 def end(status):
@@ -81,14 +103,18 @@ def generate_block_palette(schematic_path, y = None):
     return palette
 
 
-def generate_block_palette_region(palette, y):
+def generate_block_palette_region(palette, y, expected):
     # generate new region with correct size from table
-    palette_region = Region(0, y, 0, len(palette), 1, 2)
+    palette_region = Region(0, y * point_multiplier, 1 - expected, len(palette), 1, 1 + expected)
 
     # place block in the schematic next to appropriate data block
     for x in range(len(palette)):
         palette_region.setblock(x, 0, 0, BlockState(palette[x]))
-        palette_region.setblock(x, 0, 1, BlockState(data_palette[x]))
+
+        block_id = to_hex(x + 1, expected)
+
+        for sub_y in range(expected):
+            palette_region.setblock(x, 0, sub_y + 1, BlockState(data_palette[int(block_id[sub_y])]))
 
     return palette_region
 
@@ -130,7 +156,9 @@ def extract_data_points(path, inverted=False):
         if layer:
             temp_layers.append(layer)
 
-    # swap x and y again to produce standardized output
+        # return  temp_layers
+
+    # swap x and z again to produce standardized output
     layers = schematic_array = [[[0 for z in range(len(temp_layers))] for y in range(len(temp_layers[0]))] for x in range(len(temp_layers[0][0]))]
 
     for x in range(len(temp_layers)):
@@ -138,7 +166,7 @@ def extract_data_points(path, inverted=False):
         for y in range(len(temp_layers[0])):
             line = []
             for z in range(len(temp_layers[0][0])):
-                layers[x][y][z] = temp_layers[z][y][x]
+                layers[z][y][x] = temp_layers[x][y][z]
 
     return layers
 
@@ -158,14 +186,25 @@ def input_path(pre_path, path_name, extension=""):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
-    folder_path = input_path("", "litematic folder path: ") + "\\"
+    if not folder_path:
+        folder_path = input_path("", "litematic folder path: ") + "\\"
 
-    rom_path = input_path(folder_path, "ROM litematic name (e.g. \"CoolRom\"): ", ".litematic")
+    if not rom_path:
+        rom_path = input_path(folder_path, "ROM litematic name (e.g. \"CoolRom\"): ", ".litematic")
 
-    pattern_path = input_path(folder_path, "Pattern litematic name (e.g. \"CoolPattern\"): ", ".litematic")
+    if not pattern_path:
+        pattern_path = input_path(folder_path, "Pattern litematic name (e.g. \"CoolPattern\"): ", ".litematic")
 
-    output_file = input("output file name (e.g. \"CoolConfiguredRom\"): ") + ".litematic"
-    print(output_file)
+    if not output_file:
+        output_file = input("output file name (e.g. \"CoolConfiguredRom\"): ") + ".litematic"
+
+    while True:
+        point_multiplier_str = input("block id hexits: ")
+        try:
+            point_multiplier = int(point_multiplier_str)
+            break
+        except:
+            print(f"could not convert \"{point_multiplier_str}\": not an integer")
 
     placeholder_input = input("enter placeholder block id or skip to use default (\"minecraft:beacon\"): ")
     if placeholder_input != "":
@@ -174,28 +213,28 @@ if __name__ == '__main__':
     else:
         print(f"using default block \"{placeholder_block}\"")
 
-    litematic_version = input("enter litematic version (1-6)")
+    litematic_version = input("enter litematic version (1-6): ")
     print(f"using litematic version {litematic_version}")
 
-    # break both schematics down into comparable units
+    # break pattern schematic down into comparable units
     pattern = schematic_to_3d_array(Schematic.load(pattern_path))
 
     # attempt to get data Points on z-axis
     dataPoints = extract_data_points(rom_path)
 
     if not dataPoints:
-        print(f"unable to get data points")
+        print(f"unable to get data points: none found using filter \"{placeholder_block}\"")
         end(1)
 
     # retry getting data points on x-axis if layout doesn't match up
-    if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
-        print(f"unable to match data points, retrying on second axis -> pattern({len(pattern)}|{len(pattern[0])}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
+    if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]*point_multiplier) or len(dataPoints[0][0]) is not len(pattern[0][0]):
+        print(f"unable to match data points, retrying on second axis -> pattern({len(pattern)}|{len(pattern[0])} * {point_multiplier}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
         dataPoints = extract_data_points(rom_path, True)
 
     # quit if data point layout still doesn't match up
-    if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
-        print(f"unable to match data points, check your dimensions -> pattern({len(pattern)}|{len(pattern[0])}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
-        end(1)
+        if len(dataPoints) is not len(pattern) or len(dataPoints[0]) is not len(pattern[0]) or len(dataPoints[0][0]) is not len(pattern[0][0]):
+            print(f"unable to match data points, check your dimensions -> pattern({len(pattern)}|{len(pattern[0])}|{len(pattern[0][0])}) data-points({len(dataPoints)}|{len(dataPoints[0])}|{len(dataPoints[0][0])})")
+            end(1)
 
     rom_schematic = Schematic.load(rom_path)
     rom_region = None
@@ -216,14 +255,14 @@ if __name__ == '__main__':
     # accumulate all regions into regions dict
     regions = {}
 
-    for y in range(len(dataPoints[0])):
+    for y in range(math.floor(len(dataPoints[0]) / point_multiplier)):
         # get y layer in schematic
         schem_y = dataPoints[0][y][0][1]
         # generate block palette for current layer
         block_palette = generate_block_palette(pattern_path, y)
         # quit if pattern has too many colors
-        if len(block_palette) > 15:
-            print(f"too many colors in pattern on layer {y}: counted {len(block_palette)} Maximum of 15 allowed")
+        if len(block_palette) > 15 + (point_multiplier - 1)* 16:
+            print(f"too many colors in pattern on layer {y}: counted {len(block_palette)} Maximum of {15 + (point_multiplier - 1)* 16} allowed")
             end(1)
 
         print(f"palette for layer: {y}")
@@ -231,13 +270,17 @@ if __name__ == '__main__':
         for block in block_palette:
             print(f"{block} -> {data_palette[block_palette.index(block)]}")
 
-        palette_region = generate_block_palette_region(block_palette, schem_y)
+        palette_region = generate_block_palette_region(block_palette, schem_y, point_multiplier)
         regions[f"palette for layer {y}"] = palette_region
 
         for x in range(len(dataPoints)):
             for z in range(len(dataPoints[0][0])):
-                rx, ry, rz = dataPoints[x][y][z]
-                generated_region.setblock(rx, ry, rz, BlockState(data_palette[block_palette.index(pattern[x][y][z])]))
+                # assign each block a hex value, start with 1
+                block_id = to_hex(block_palette.index(pattern[x][y][z]) + 1, point_multiplier)
+
+                for sub_y in range(point_multiplier):
+                    rx, ry, rz = dataPoints[x][y*point_multiplier + sub_y][z]
+                    generated_region.setblock(rx, ry, rz, BlockState(data_palette[int(block_id[sub_y], 16)]))
 
     regions["rom"] = generated_region
 
